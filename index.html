@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Venice, 1730 — Canaletto</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      font-family: 'Palatino Linotype', Palatino, 'Book Antiqua', serif;
+      overflow: hidden;
+      color: #d4bc8a;
+    }
+
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    #canvas-container canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* Entry screen */
+    #entry {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      gap: 2rem;
+      transition: opacity 1.5s ease;
+    }
+
+    #entry.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .entry-painting {
+      width: min(700px, 90vw);
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border: 1px solid rgba(212, 188, 138, 0.2);
+      box-shadow: 0 0 80px rgba(212, 188, 138, 0.05);
+      filter: brightness(0.7) sepia(0.2);
+    }
+
+    .entry-title {
+      text-align: center;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      font-size: clamp(0.65rem, 1.5vw, 0.85rem);
+      color: rgba(212, 188, 138, 0.5);
+      font-style: italic;
+    }
+
+    .entry-main {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      letter-spacing: 0.15em;
+      color: #d4bc8a;
+      font-weight: normal;
+      text-align: center;
+    }
+
+    #enter-btn {
+      margin-top: 1rem;
+      padding: 0.9rem 3rem;
+      background: transparent;
+      border: 1px solid rgba(212, 188, 138, 0.4);
+      color: #d4bc8a;
+      font-family: inherit;
+      font-size: 0.75rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #enter-btn:hover {
+      background: rgba(212, 188, 138, 0.08);
+      border-color: rgba(212, 188, 138, 0.7);
+    }
+
+    /* HUD */
+    #hud {
+      position: fixed;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 2.5rem;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 1s ease;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #hud.visible { opacity: 1; }
+
+    .hud-key {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .key {
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid rgba(212, 188, 138, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      letter-spacing: 0.05em;
+      color: rgba(212, 188, 138, 0.5);
+    }
+
+    .key-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(212, 188, 138, 0.3);
+    }
+
+    /* Audio indicator */
+    #audio-indicator {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      opacity: 0;
+      transition: opacity 1s ease;
+      z-index: 10;
+    }
+
+    #audio-indicator.visible { opacity: 1; }
+
+    .audio-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 14px;
+    }
+
+    .bar {
+      width: 2px;
+      background: rgba(212, 188, 138, 0.4);
+      border-radius: 1px;
+      animation: barPulse 1.2s ease-in-out infinite;
+    }
+    .bar:nth-child(1) { height: 4px;  animation-delay: 0s; }
+    .bar:nth-child(2) { height: 10px; animation-delay: 0.2s; }
+    .bar:nth-child(3) { height: 7px;  animation-delay: 0.4s; }
+    .bar:nth-child(4) { height: 12px; animation-delay: 0.1s; }
+    .bar:nth-child(5) { height: 5px;  animation-delay: 0.3s; }
+
+    @keyframes barPulse {
+      0%, 100% { opacity: 0.3; transform: scaleY(1); }
+      50%       { opacity: 0.8; transform: scaleY(1.4); }
+    }
+
+    .audio-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(212, 188, 138, 0.35);
+      font-style: italic;
+    }
+
+    /* Location tag */
+    #location {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      opacity: 0;
+      transition: opacity 1s ease;
+      z-index: 10;
+    }
+
+    #location.visible { opacity: 1; }
+
+    .location-main {
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(212, 188, 138, 0.4);
+    }
+
+    .location-sub {
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      color: rgba(212, 188, 138, 0.25);
+      font-style: italic;
+      margin-top: 0.2rem;
+    }
+
+    /* Loading state */
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0f;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1.5rem;
+      z-index: 90;
+    }
+
+    #loading.active {
+      display: flex;
+    }
+
+    .loading-text {
+      font-size: 0.7rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(212, 188, 138, 0.4);
+      font-style: italic;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50%       { opacity: 0.7; }
+    }
+
+    .loading-line {
+      width: 120px;
+      height: 1px;
+      background: rgba(212, 188, 138, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .loading-line::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: rgba(212, 188, 138, 0.5);
+      animation: loadSlide 2s ease-in-out infinite;
+    }
+
+    @keyframes loadSlide {
+      0%   { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    /* Pointer lock overlay */
+    #click-to-play {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      cursor: pointer;
+    }
+
+    #click-to-play.active {
+      display: flex;
+    }
+
+    .click-hint {
+      font-size: 0.65rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(212, 188, 138, 0.3);
+      font-style: italic;
+      animation: pulse 2s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Entry Screen -->
+  <div id="entry">
+    <img class="entry-painting"
+         src="Canaletto_-_The_Entrance_to_the_Grand_Canal__Venice_-_Google_Art_Project.jpg"
+         alt="Canaletto — Entrance to the Grand Canal" />
+    <div>
+      <div class="entry-main">Entrance to the Grand Canal</div>
+      <div class="entry-title">Giovanni Antonio Canal &nbsp;·&nbsp; Venice &nbsp;·&nbsp; c. 1730</div>
+    </div>
+    <button id="enter-btn">Enter the World</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="loading-text">Entering Venice, 1730</div>
+    <div class="loading-line"></div>
+  </div>
+
+  <!-- Main canvas (renderer.domElement appended here by JS) -->
+  <div id="canvas-container"></div>
+
+  <!-- Click to re-lock pointer -->
+  <div id="click-to-play">
+    <div class="click-hint">Click to continue</div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-key">
+      <div class="key">W</div>
+      <div class="key-label">Forward</div>
+    </div>
+    <div class="hud-key">
+      <div class="key">A</div>
+      <div class="key-label">Left</div>
+    </div>
+    <div class="hud-key">
+      <div class="key">S</div>
+      <div class="key-label">Back</div>
+    </div>
+    <div class="hud-key">
+      <div class="key">D</div>
+      <div class="key-label">Right</div>
+    </div>
+    <div class="hud-key">
+      <div class="key" style="font-size:0.5rem;">ESC</div>
+      <div class="key-label">Exit</div>
+    </div>
+  </div>
+
+  <!-- Location tag -->
+  <div id="location">
+    <div class="location-main">Venice, Republic of Venice</div>
+    <div class="location-sub">Grand Canal Entrance &nbsp;·&nbsp; c. 1730</div>
+  </div>
+
+  <!-- Audio indicator -->
+  <div id="audio-indicator">
+    <div class="audio-bars">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </div>
+    <div class="audio-label">1730 Soundscape</div>
+  </div>
+
+  <!-- SparkJS + Three.js via local node_modules -->
+  <script type="importmap">
+    { "imports": { 
+      "@sparkjsdev/spark": "/node_modules/@sparkjsdev/spark/dist/spark.module.js",
+      "three": "/node_modules/three/build/three.module.js"
+    } }
+  </script>
+
+  <script type="module">
+  import * as THREE from "three";
+  import { SplatMesh } from "@sparkjsdev/spark";
+
+  // ─────────────────────────────────────────────
+  // SPATIAL AUDIO MAP — 1730 Venice
+  // Coordinates are relative to scene center (0,0,0)
+  // X: negative = left (Salute side), positive = right (palazzo side)
+  // Y: vertical
+  // Z: negative = forward into canal, positive = behind viewer
+  // ─────────────────────────────────────────────
+
+  const AUDIO_SOURCES = [
+    {
+      id: 'water_foreground',
+      file: 'audio/water_canal.flac',
+      position: [0, -1.5, -2],       // directly ahead, low — canal surface
+      volume: 0.7,
+      loop: true,
+      refDistance: 2,
+      rolloff: 1.2,
+      label: 'Canal water'
+    },
+    {
+      id: 'gondolier_left',
+      file: 'audio/gondolier_hoe.mp3',
+      position: [-3, 0, -4],          // left side, mid distance
+      volume: 0.5,
+      loop: true,
+      refDistance: 3,
+      rolloff: 1.5,
+      label: 'Gondolier calls'
+    },
+    {
+      id: 'gondolier_right',
+      file: 'audio/gondolier_hoe.mp3',
+      position: [4, 0, -6],           // right side, further back
+      volume: 0.35,
+      loop: true,
+      refDistance: 3,
+      rolloff: 1.5,
+      label: 'Gondolier calls'
+    },
+    {
+      id: 'rigging',
+      file: 'audio/rigging_rope.wav',
+      position: [-5, 1, -1],          // far left — trading vessels with masts
+      volume: 0.4,
+      loop: true,
+      refDistance: 2,
+      rolloff: 2,
+      label: 'Rigging & rope'
+    },
+    {
+      id: 'salute_bells',
+      file: 'audio/churchbells.aiff',
+      position: [-8, 6, -5],          // high left — Salute dome
+      volume: 0.6,
+      loop: false,
+      refDistance: 8,
+      rolloff: 0.8,                   // bells carry far, slow rolloff
+      label: 'Santa Maria della Salute'
+    },
+    {
+      id: 'marangona',
+      file: 'audio/maragona_bell.wav',
+      position: [-4, 10, -12],        // very high, deep background — St Marks campanile
+      volume: 0.45,
+      loop: false,
+      refDistance: 12,
+      rolloff: 0.5,                   // carries across the lagoon
+      label: 'Marangona — St Marks'
+    },
+    {
+      id: 'seagulls',
+      file: 'audio/seagulls.wav',
+      position: [0, 4, -15],          // high, far ahead — open lagoon
+      volume: 0.35,
+      loop: true,
+      refDistance: 6,
+      rolloff: 1,
+      label: 'Seagulls'
+    },
+    {
+      id: 'lagoon_wind',
+      file: 'audio/lagoon_wind.wav',
+      position: [0, 2, -20],          // furthest point — open water horizon
+      volume: 0.3,
+      loop: true,
+      refDistance: 8,
+      rolloff: 0.6,
+      label: 'Lagoon wind'
+    },
+    {
+      id: 'palazzo_crowd',
+      file: 'audio/distant_crowd.mp3',
+      position: [6, 0, -8],           // right side palazzos, background
+      volume: 0.25,
+      loop: true,
+      refDistance: 4,
+      rolloff: 1.8,
+      label: 'Piazzetta crowd'
+    }
+  ];
+
+  // ─────────────────────────────────────────────
+  // SCENE SETUP
+  // ─────────────────────────────────────────────
+
+  const container = document.getElementById('canvas-container');
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0xbdd4e7); // warm Venetian lagoon sky
+  renderer.autoClear = false;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  renderer.domElement.style.cssText = 'display:block;width:100%;height:100%;position:absolute;top:0;left:0;';
+  container.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x8a9bb0, 0.02);
+
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 2.8, 3); // raised to eye level above canal
+
+  // Expose to window for debugging
+  window.__getDebug = () => ({
+    cam: { x: +camera.position.x.toFixed(2), y: +camera.position.y.toFixed(2), z: +camera.position.z.toFixed(2) },
+    sceneChildren: scene.children.length
+  });
+
+  // Ambient light — warm Mediterranean afternoon
+  const ambient = new THREE.AmbientLight(0xf5e8c8, 0.6);
+  scene.add(ambient);
+
+  const sunLight = new THREE.DirectionalLight(0xfff3d6, 1.2);
+  sunLight.position.set(-5, 10, -5);
+  scene.add(sunLight);
+
+  // ─────────────────────────────────────────────
+  // AUDIO ENGINE
+  // ─────────────────────────────────────────────
+
+  let audioCtx = null;
+  let listener = null;
+  const activeSources = [];
+
+  function initAudio() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Three.js audio listener — follows camera
+    listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    AUDIO_SOURCES.forEach(src => {
+      loadSpatialAudio(src);
+    });
+  }
+
+  async function loadSpatialAudio(srcDef) {
+    try {
+      const response = await fetch(srcDef.file);
+      if (!response.ok) {
+        // Audio file not yet added — log position for when you add files
+        console.log(`[Audio placeholder] ${srcDef.label} → position: ${srcDef.position}`);
+        return;
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+      // Create positional audio object in Three.js scene
+      const sound = new THREE.PositionalAudio(listener);
+      sound.setBuffer(audioBuffer);
+      sound.setRefDistance(srcDef.refDistance);
+      sound.setRolloffFactor(srcDef.rolloff);
+      sound.setVolume(srcDef.volume);
+      sound.setLoop(srcDef.loop);
+
+      // Place it in 3D space
+      const audioObj = new THREE.Object3D();
+      audioObj.position.set(...srcDef.position);
+      audioObj.add(sound);
+      scene.add(audioObj);
+
+      sound.play();
+      activeSources.push(sound);
+
+      console.log(`✓ Playing: ${srcDef.label}`);
+    } catch (err) {
+      console.log(`[Audio not loaded yet] ${srcDef.label} — add file to /audio/`);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // SPLAT LOADER PLACEHOLDER
+  // Replace this block with SparkJS splat loader
+  // once you have canal.spz from Marble
+  // ─────────────────────────────────────────────
+
+  function loadSplat() {
+    try {
+      new SplatMesh({
+        url: "venice/canal.spz",
+        onLoad: (mesh) => {
+          scene.add(mesh);
+          console.log("✓ Splat loaded: canal.spz");
+        }
+      });
+    } catch(e) {
+      console.error("Splat load error:", e);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // FIRST PERSON CONTROLS — matches painted-worlds exactly
+  // ─────────────────────────────────────────────
+
+  const keysRef = {};
+  window.__keysRef = keysRef;
+  let yaw   = 0;
+  let pitch = 0;
+
+  document.addEventListener('keydown', e => { keysRef[e.key.toLowerCase()] = true; });
+  document.addEventListener('keyup',   e => { keysRef[e.key.toLowerCase()] = false; });
+
+  // Pointer lock — on renderer canvas AND container
+  const requestLock = () => renderer.domElement.requestPointerLock();
+  renderer.domElement.addEventListener('click', requestLock);
+  document.getElementById('canvas-container').addEventListener('click', requestLock);
+
+  document.addEventListener('mousemove', e => {
+    if (document.pointerLockElement !== renderer.domElement) return;
+    yaw   -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+    pitch  = Math.max(-Math.PI * 0.44, Math.min(Math.PI * 0.44, pitch));
+  });
+
+  document.addEventListener('pointerlockchange', () => {
+    const locked = document.pointerLockElement === renderer.domElement;
+    document.getElementById('click-to-play').classList.toggle('active', !locked);
+  });
+
+  // ─────────────────────────────────────────────
+  // GAME LOOP
+  // ─────────────────────────────────────────────
+
+  const MOVE_SPEED = 0.18;
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // Apply yaw/pitch to camera — exactly like painted-worlds
+    const euler = new THREE.Euler(pitch, yaw, 0, 'YXZ');
+    camera.quaternion.setFromEuler(euler);
+
+    // WASD movement — matches painted-worlds keysRef pattern
+    if (document.pointerLockElement === renderer.domElement) {
+      const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+      const right   = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+
+      if (keysRef['w']) camera.position.addScaledVector(forward, MOVE_SPEED);
+      if (keysRef['s']) camera.position.addScaledVector(forward, -MOVE_SPEED);
+      if (keysRef['a']) camera.position.addScaledVector(right, -MOVE_SPEED);
+      if (keysRef['d']) camera.position.addScaledVector(right, MOVE_SPEED);
+      camera.position.y = 1.6;
+    }
+
+    renderer.setClearColor(0xbdd4e7, 1);
+    renderer.clear(true, true, true);
+    renderer.render(scene, camera);
+    window.__camPos = { x: +camera.position.x.toFixed(2), y: +camera.position.y.toFixed(2), z: +camera.position.z.toFixed(2) };
+  }
+
+  // ─────────────────────────────────────────────
+  // UI FLOW
+  // ─────────────────────────────────────────────
+
+  document.getElementById('enter-btn').addEventListener('click', async () => {
+    const entry = document.getElementById('entry');
+    const loading = document.getElementById('loading');
+
+    entry.classList.add('fade-out');
+    setTimeout(() => {
+      entry.style.display = 'none';
+      loading.classList.add('active');
+    }, 1500);
+
+    // Init everything
+    setTimeout(async () => {
+      loadSplat();
+      initAudio();
+      animate();
+
+      // Auto-request pointer lock so WASD works immediately
+      setTimeout(() => renderer.domElement.requestPointerLock(), 300);
+
+      loading.classList.remove('active');
+
+      // Show HUD + indicators
+      setTimeout(() => {
+        document.getElementById('hud').classList.add('visible');
+        document.getElementById('location').classList.add('visible');
+        document.getElementById('audio-indicator').classList.add('visible');
+        document.getElementById('click-to-play').classList.add('active');
+      }, 500);
+    }, 2500);
+  });
+
+  // Resize
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+  </script>
+</body>
+</html>
