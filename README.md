@@ -73,6 +73,23 @@ Painted Worlds and Painted Time are companion projects exploring the same questi
 - More accurate historical audio research per painting
 - Refined Gaussian splat rendering pipeline
 
+## Model Observations
+
+**Where the model struggled:**
+Boat and vessel shapes in the Venice canal scene were the hardest
+geometry for the world-generation model to render accurately.
+Hard-edged, symmetrical man-made forms (gondolas, hulls) don't
+map cleanly onto splat primitives optimized for organic and
+painterly surfaces. The canal water itself rendered well;
+the boats sitting in it did not.
+
+**The broader pattern:**
+Gaussian splatting via Marble handles ambiguous, atmospheric, and
+organic geometry significantly better than precise man-made forms.
+Paintings with architectural or mechanical subjects may need
+different source image treatment upstream to compensate.
+
+
 ---
 
 *Built by Aditya Kumar*
