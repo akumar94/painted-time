@@ -4,7 +4,7 @@
 
 Painted Time is a spatial audio experience built inside AI-generated 3D worlds from historical paintings. Where [Painted Worlds](https://github.com/akumar94/painted-worlds) lets you inhabit a painting spatially, Painted Time asks a different question: what was the *temporal* experience of standing in that place, in that moment?
 
-The first painting is Canaletto's *Entrance to the Grand Canal, Venice* (c. 1730). You walk through it. The canal laps below you. A gondolier calls from your left. Church bells ring from the Salute dome. The Marangona bell, the great bell of St. Mark's campanile, tolls from deep in the distance. Every sound is historically grounded and spatially positioned in 3D space relative to what Canaletto actually painted.
+The painting is Canaletto's *Entrance to the Grand Canal, Venice* (c. 1730). You walk through it. The canal laps below you. A gondolier calls from your left. Church bells ring from the Salute dome. The Marangona bell, the great bell of St. Mark's campanile, tolls from deep in the distance. Every sound is historically grounded and spatially positioned in 3D space relative to what Canaletto actually painted.
 
 ---
 
