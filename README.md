@@ -19,7 +19,7 @@ https://github.com/akumar94/painted-time/releases/download/v1.1/painted-time-dem
 
 Painted Time uses [World Labs Marble API](https://worldlabs.ai) to generate a Gaussian splat from a painting, then renders it in WebGL via [SparkJS](https://sparkjs.dev) and Three.js. Spatial audio is handled entirely with the Web Audio API with no libraries, using `PannerNode` with `HRTF` panning to position each sound source in 3D space relative to the camera.
 
-As you move through the scene, the audio mix changes. Walk toward the canal and the water gets louder. Turn left and the gondolier's call shifts into your left ear. Walk toward the open lagoon and the seagulls pull forward. The soundscape is not ambient. It is architectural.
+As you move through the scene, the audio mix changes. Walk toward the canal and the water gets louder. Turn left and the gondolier's call shifts into your left ear. Walk toward the open lagoon and the seagulls pull forward. 
 
 ---
 
