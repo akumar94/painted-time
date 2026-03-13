@@ -10,7 +10,7 @@ The first painting is Canaletto's *Entrance to the Grand Canal, Venice* (c. 1730
 
 ## Demo
 
-[▶ Watch Demo](https://github.com/akumar94/painted-time/releases/tag/v1.1)
+[![Painted Time Demo](https://img.youtube.com/vi/MMjpgbgg6p8/maxresdefault.jpg)](https://youtu.be/MMjpgbgg6p8)
 
 ---
 
