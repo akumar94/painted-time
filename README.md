@@ -40,7 +40,6 @@ Each source is positioned in 3D space corresponding to its location in the paint
 | Sound | Position | Source |
 |---|---|---|
 | Canal water | Foreground, below | Freesound (recorded at Venice pier) |
-| Gondolier calls (x2) | Left and right, mid-distance | ElevenLabs |
 | Ship rigging | Far left, trading vessels | Freesound |
 | Church bells | High left, Santa Maria della Salute | Freesound (recorded in Venice, 2008) |
 | Marangona bell | Very high, deep background, St. Mark's | Freesound |
