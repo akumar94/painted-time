@@ -73,7 +73,7 @@ Painted Worlds and Painted Time are companion projects exploring the same questi
 - More accurate historical audio research per painting
 - Refined Gaussian splat rendering pipeline
 
-## Model Observations
+##  Model Observations
 
 **Where the model struggled:**
 Boat and vessel shapes in the Venice canal scene were the hardest
